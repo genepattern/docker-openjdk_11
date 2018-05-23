@@ -3,13 +3,13 @@
 # &copy; 2017-2018 Regents of the University of California and the Broad Institute. All rights reserved.
 #
 echo "setting up sigterm trap"
-trap "echo SIGINT Booh! == $? received;exit" SIGINT 
-trap "echo SIGTERM Booh! == $? received;exit" SIGTERM 
-trap "echo EXIT Booh! == $? received;exit" EXIT 
-trap "echo SIGQUIT Booh! == $? received;exit" SIGQUIT 
-trap "echo SIGKILL Booh! == $? received;exit" SIGKILL
-trap "echo SIGSTOP Booh! == $? received;exit" SIGSTOP 
-trap "echo SIGHUP Booh! == $? received;exit" SIGHUP
+trap "echo SIGINT Received! == $? received;exit" SIGINT 
+trap "echo SIGTERM Received! == $? received;exit" SIGTERM 
+trap "echo EXIT Recieved! == $? received;exit" EXIT 
+trap "echo SIGQUIT Received! == $? received;exit" SIGQUIT 
+trap "echo SIGKILL Received! == $? received;exit" SIGKILL
+trap "echo SIGSTOP Received! == $? received;exit" SIGSTOP 
+trap "echo SIGHUP Received! == $? received;exit" SIGHUP
 
 #
 # strip off spaces if present
@@ -30,7 +30,6 @@ EXECUTABLE=$5
 #
 # /local on the compute node should be mounted to /local in this (outer) container
 #
-LOCAL_DIR_ON_HOST=/local
 LOCAL_DIR=/local
 
 #
@@ -104,8 +103,8 @@ fi
 #
 # TEMP ISSUE- need to make a couple of dir roots that Peter's script will need to sync into 
 #
-mkdir -p $LOCAL_DIR/Users/liefeld/GenePattern
-mkdir -p $LOCAL_DIR/opt/gpbeta/gp_home/users/
+# mkdir -p $LOCAL_DIR/Users/liefeld/GenePattern
+# mkdir -p $LOCAL_DIR/opt/gpbeta/gp_home/users/
 
 # RUN Peter's file for additional S3 fetches
 if [ -f "$LOCAL_DIR$GP_METADATA_DIR/aws-sync-from-s3.sh" ]
@@ -118,7 +117,7 @@ then
     echo "===Stubbed out S3 script "
 fi
 
-#synchDir 30s $LOCAL_DIR$GP_METADATA_DIR $S3_ROOT$GP_METADATA_DIR &
+synchDir 30s $LOCAL_DIR$WORKING_DIR $S3_ROOT$WORKING_DIR &
 
 echo "========== S3 copies in complete, DEBUG inside 1st container ================="
 

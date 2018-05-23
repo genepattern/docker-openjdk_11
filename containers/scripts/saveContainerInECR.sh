@@ -8,8 +8,8 @@ fi
 
 CONTAINER_TAG=$MODULE_SPECIFIC_CONTAINER
 CONTAINER_VERSION=1
-PROFILE="--profile genepattern"
-#PROFILE=""
+#PROFILE="--profile genepattern"
+PROFILE=""
 
 aws --region us-east-1 ecr describe-images --repository-name $CONTAINER_TAG  > repo.json 
 if [ -s repo.json ];
