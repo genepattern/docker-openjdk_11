@@ -1,9 +1,15 @@
 #!/bin/sh
 
-CONTAINER_TAG=liefeld/test-java-17
+if [ "x$MODULE_SPECIFIC_CONTAINER" = "x" ]; then
+    # Variable is empty
+    echo "== no MODULE_SPECIFIC_CONTAINER specified. Using default for test purposes "
+    MODULE_SPECIFIC_CONTAINER=liefeld/test-cache_module_specific_container
+fi
+
+CONTAINER_TAG=$MODULE_SPECIFIC_CONTAINER
 CONTAINER_VERSION=1
-#PROFILE="--profile genepattern"
-PROFILE=""
+PROFILE="--profile genepattern"
+#PROFILE=""
 
 aws --region us-east-1 ecr describe-images --repository-name $CONTAINER_TAG  > repo.json 
 if [ -s repo.json ];
@@ -30,6 +36,7 @@ aws --region us-east-1 ecr create-repository --repository-name $CONTAINER_TAG  >
 echo "repo creation returned..."
 
 # tag the just-saved container for the ECR
+# the aws id # is hard coded - should get it dynamically
 docker tag $CONTAINER_TAG 718039241689.dkr.ecr.us-east-1.amazonaws.com/$CONTAINER_TAG:$CONTAINER_VERSION
 
 # push into the ECR

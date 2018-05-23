@@ -38,8 +38,10 @@ CONTAINER_ID="`docker run -d -t $DOCKER_CONTAINER sleep 1d`"
 
 docker exec $CONTAINER_ID mkdir -p $GP_METADATA_DIR
 docker cp $LOCAL_DIR$GP_METADATA_DIR/. $CONTAINER_ID:$GP_METADATA_DIR
+
 docker exec $CONTAINER_ID mkdir -p $MOD_LIBS
 docker cp $LOCAL_DIR$MOD_LIBS/. $CONTAINER_ID:$MOD_LIBS
+
 docker exec $CONTAINER_ID mkdir -p $TASKLIB
 docker cp $LOCAL_DIR$TASKLIB/. $CONTAINER_ID:$TASKLIB
 docker exec $CONTAINER_ID mkdir -p $WORKING_DIR

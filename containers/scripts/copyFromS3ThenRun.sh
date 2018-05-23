@@ -2,8 +2,19 @@
 #
 # &copy; 2017-2018 Regents of the University of California and the Broad Institute. All rights reserved.
 #
+echo "setting up sigterm trap"
+trap "echo SIGINT Booh! == $? received;exit" SIGINT 
+trap "echo SIGTERM Booh! == $? received;exit" SIGTERM 
+trap "echo EXIT Booh! == $? received;exit" EXIT 
+trap "echo SIGQUIT Booh! == $? received;exit" SIGQUIT 
+trap "echo SIGKILL Booh! == $? received;exit" SIGKILL
+trap "echo SIGSTOP Booh! == $? received;exit" SIGSTOP 
+trap "echo SIGHUP Booh! == $? received;exit" SIGHUP
 
+#
 # strip off spaces if present
+#  - this is to conform to the old API so both can be run in parallel
+#
 TASKLIB="$(echo -e "${1}" | tr -d '[:space:]')"
 INPUT_FILES_DIR="$(echo -e "${2}" | tr -d '[:space:]')"
 S3_ROOT="$(echo -e "${3}" | tr -d '[:space:]')"
@@ -21,10 +32,6 @@ EXECUTABLE=$5
 #
 LOCAL_DIR_ON_HOST=/local
 LOCAL_DIR=/local
-###### below used hardcoded for beta ami.  Need to handle these some other way to be passed in
-mkdir -p $LOCAL_DIR/Users/liefeld/GenePattern
-mkdir -p $LOCAL_DIR/opt/gpbeta/gp_home/users/
-ln -s /local/opt/ /opt
 
 #
 # assign filenames for STDOUT and STDERR if not already set
@@ -34,8 +41,12 @@ ln -s /local/opt/ /opt
 : ${STDERR_FILENAME=$GP_METADATA_DIR/stderr.txt}
 : ${EXITCODE_FILENAME=$GP_METADATA_DIR/exit_code.txt}
 
-# Default is to mount the local drive, option us /usr/local/bin/runLocalCp.sh
-: ${RUN_DOCKER_SCRIPT=/usr/local/bin/runLocalMnt.sh}
+# Default is to mount the local drive for everything but modlibs which are cp'd in
+#   options are 
+#  /usr/local/bin/runLocalMnt.sh - mounts all drives, copies none 
+#  /usr/local/bin/runLocalCp.sh  --> copies all dirs in, no mounts
+#
+: ${RUN_DOCKER_SCRIPT=/usr/local/bin/runLocal.sh}
 chmod a+x $5
 
 #
@@ -45,27 +56,34 @@ if [ "x$DOCKER_CONTAINER" = "x" ]; then
     # Variable is empty
     echo "== no DOCKER_CONTAINER specified. Using default "
     DOCKER_CONTAINER=genepattern/docker-java17openjdk:develop
+fi
 
+#
+# and a possibly different container id to use to save or reuse a cached container
+#
+if [ "x$MODULE_SPECIFIC_CONTAINER" = "x" ]; then
+    # Variable is empty
+    echo "== no MODULE_SPECIFIC_CONTAINER specified. No caching of the container will be done at the end of the run "
 fi
 
 
-# copy the source over from tasklib
-mkdir -p $TASKLIB
+# copy tasklib in, this is necessary until each module has a captured or specially built container
 echo "=== 1. PERFORMING AWS SYNC $S3_ROOT$TASKLIB $LOCAL_DIR/$TASKLIB"
 aws s3 sync $S3_ROOT$TASKLIB $LOCAL_DIR/$TASKLIB --quiet
 
-# copy the inputs
-mkdir -p $INPUT_FILES_DIR
+# copy the inputs, this is redundant with the aws-synch-from-s3.sh script but left in for backward compatibility
 echo "=== 2. PERFORMING aws s3 sync $S3_ROOT$INPUT_FILES_DIR $LOCAL_DIR/$INPUT_FILES_DIR"
 aws s3 sync $S3_ROOT$INPUT_FILES_DIR $LOCAL_DIR/$INPUT_FILES_DIR --quiet
 
-# switch to the working directory and sync it up
+# switch to the working directory and sync it up - should be empty, maybe drop this
 echo "=== 3. PERFORMING aws s3 sync $S3_ROOT$WORKING_DIR $LOCAL_DIR/$WORKING_DIR "
 aws s3 sync $S3_ROOT$WORKING_DIR $LOCAL_DIR/$WORKING_DIR --quiet
 
+# sync the metadata dir - VITAL - this is where the aws-sync and the exec script will come from
 echo "=== 4. synching gp_metadata_dir"
 aws s3 sync $S3_ROOT$GP_METADATA_DIR $LOCAL_DIR/$GP_METADATA_DIR 
 
+# make sure scripts in metadata dir are executable
 cd $LOCAL_DIR/$WORKING_DIR
 echo "=== 5. chmodding $GP_METADATA_DIR from $PWD"
 chmod a+rwx $LOCAL_DIR/$GP_METADATA_DIR/*
@@ -83,6 +101,12 @@ else
     ls -alrt $MOD_LIBS
 fi
 
+#
+# TEMP ISSUE- need to make a couple of dir roots that Peter's script will need to sync into 
+#
+mkdir -p $LOCAL_DIR/Users/liefeld/GenePattern
+mkdir -p $LOCAL_DIR/opt/gpbeta/gp_home/users/
+
 # RUN Peter's file for additional S3 fetches
 if [ -f "$LOCAL_DIR$GP_METADATA_DIR/aws-sync-from-s3.sh" ]
 then
@@ -94,6 +118,7 @@ then
     echo "===Stubbed out S3 script "
 fi
 
+#synchDir 30s $LOCAL_DIR$GP_METADATA_DIR $S3_ROOT$GP_METADATA_DIR &
 
 echo "========== S3 copies in complete, DEBUG inside 1st container ================="
 
@@ -105,8 +130,11 @@ echo "====== END RUNNING Module, copy back from S3  ================="
 echo "=== 6. PERFORMING aws s3 sync $LOCAL_DIR/$WORKING_DIR $S3_ROOT$WORKING_DIR"
 aws s3 sync $LOCAL_DIR/$WORKING_DIR $S3_ROOT$WORKING_DIR 
 
-echo "=== 7. PERFORMING aws s3 sync $LOCAL_DIR/$TASKLIB $S3_ROOT$TASKLIB"
-aws s3 sync $LOCAL_DIR/$TASKLIB $S3_ROOT$TASKLIB --quiet
+# TASKLIB- NO LONGER SYNCH'D BACK
+#echo "=== 7. PERFORMING aws s3 sync $LOCAL_DIR/$TASKLIB $S3_ROOT$TASKLIB"
+#aws s3 sync $LOCAL_DIR/$TASKLIB $S3_ROOT$TASKLIB --quiet
+
+# Synch metadata to ensure stderr.txt etc make it back
 echo "=== 8. PERFORMING aws s3 sync  $LOCAL_DIR/$GP_METADATA_DIR $S3_ROOT$GP_METADATA_DIR"
 aws s3 sync  $LOCAL_DIR/$GP_METADATA_DIR $S3_ROOT$GP_METADATA_DIR --quiet
 
