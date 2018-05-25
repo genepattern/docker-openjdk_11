@@ -36,6 +36,10 @@ GP_TASKILIB="$(echo -e "${GP_TASLKLIB" | tr -d '[:space:]')"
 : ${STDERR_FILENAME=$GP_METADATA_DIR/stderr.txt}
 : ${EXITCODE_FILENAME=$GP_METADATA_DIR/exit_code.txt}
 : ${GP_MODULE_EXEC=$GP_METADATA_DIR/exec.sh}
+: ${GP_JOB_WALLTIME_SEC="86400"}
+: ${GP_JOB_WALLTIME_PADDING="600"}
+
+let GP_MAX_WALLTIME=$GP_JOB_WALLTIME_SEC+$GP_JOB_WALLTIME_PADDING
 
 # now strip any spaces that are present of either end
 GP_METADATA_DIR="$(echo -e "${GP_METADATA_DIR}" | tr -d '[:space:]')"
