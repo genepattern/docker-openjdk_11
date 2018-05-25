@@ -38,10 +38,14 @@ if [ ! "x$MOD_LIBS_S3" = "x" ]; then
 	docker cp $GP_LOCAL_PREFIX$MOD_LIBS/. $CONTAINER_ID:$MOD_LIBS
 fi
 
-# tasklib should be in the mount points
-echo TASKLIB is $TASKLIB
-docker exec $CONTAINER_ID mkdir -p $TASKLIB
-docker cp $GP_LOCAL_PREFIX$TASKLIB $CONTAINER_ID:$TASKLIB
+# tasklib should NOT be in the mount points
+#
+# Try to log the case where a populated tasklib is already present inside the container
+#   - see if we can fail if it already exists and is populated
+#
+echo GP_TASKLIB is $GP_TASKLIB
+docker exec $CONTAINER_ID mkdir -p $GP_TASKLIB
+docker cp $GP_LOCAL_PREFIX$TASKLIB $CONTAINER_ID:$GP_TASKLIB
 
 
 #

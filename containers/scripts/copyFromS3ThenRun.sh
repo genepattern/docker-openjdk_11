@@ -11,32 +11,27 @@ trap "echo SIGKILL Received! == $? received;exit" SIGKILL
 trap "echo SIGSTOP Received! == $? received;exit" SIGSTOP 
 trap "echo SIGHUP Received! == $? received;exit" SIGHUP
 
-printenv
 ############################   START getting all inputs ################################
-
-# LEGACY - needed seperate from mounts so that it can be copied into the inner co
-# container instead of mounted so that things remain after execution in the saved container
-TASKLIB=$1
 
 # 
 # GP_DOCKER_MOUNT_POINTS = env variable, colon delimited list
-# ---  GP_S3_RETURN_POINTS = env variable, colon delimited list - meta and working
+# ---  maybe later? GP_S3_RETURN_POINTS = env variable, colon delimited list - meta and working
 # GP_S3_ROOT = env_var, s3:<bucketname><optional path>
 # GP_METADATA_DIR = path, under S3_root to sync in to bootstrap
 # GP_WORKING_DIR = working dir name, create in outer, mount to inner, and sync back
 # GP_AWS_SYNC_SCRIPT_NAME = default = aws-sync-from-s3.sh
 # GP_DOCKER_CONTAINER = the container - if generic, possibly the same as the next one
 
-# these 4 MUST be provided - no defaults - just strip spaces
+# these 5 MUST be provided - no defaults - just strip spaces
 GP_DOCKER_MOUNT_POINTS="$(echo -e "${GP_DOCKER_MOUNT_POINTS}" | tr -d '[:space:]')"
 GP_S3_ROOT="$(echo -e "${GP_S3_ROOT}" | tr -d '[:space:]')"
 GP_WORKING_DIR="$(echo -e "${GP_WORKING_DIR}" | tr -d '[:space:]')"
 GP_DOCKER_CONTAINER="$(echo -e "${GP_DOCKER_CONTAINER}" | tr -d '[:space:]')"
+GP_TASKILIB="$(echo -e "${GP_TASLKLIB" | tr -d '[:space:]')"
 
 # these have defaults that can be overridden
 : ${GP_METADATA_DIR=$GP_WORKING_DIR/.gp_metadata}
 : ${GP_AWS_SYNC_SCRIPT_NAME="aws-sync-from-s3.sh"}
-: ${GP_DOCKER_CONTAINER="genepattern/docker-java17openjdk:develop"}
 : ${STDOUT_FILENAME=$GP_METADATA_DIR/stdout.txt}
 : ${STDERR_FILENAME=$GP_METADATA_DIR/stderr.txt}
 : ${EXITCODE_FILENAME=$GP_METADATA_DIR/exit_code.txt}
@@ -45,12 +40,9 @@ GP_DOCKER_CONTAINER="$(echo -e "${GP_DOCKER_CONTAINER}" | tr -d '[:space:]')"
 # now strip any spaces that are present of either end
 GP_METADATA_DIR="$(echo -e "${GP_METADATA_DIR}" | tr -d '[:space:]')"
 GP_AWS_SYNC_SCRIPT_NAME="$(echo -e "${GP_AWS_SYNC_SCRIPT_NAME}" | tr -d '[:space:]')"
-GP_DOCKER_CONTAINER="$(echo -e "${GP_DOCKER_CONTAINER}" | tr -d '[:space:]')"
 STDOUT_FILENAME="$(echo -e "${STDOUT_FILENAME}" | tr -d '[:space:]')"
 STDERR_FILENAME="$(echo -e "${STDERR_FILENAME}" | tr -d '[:space:]')"
 EXITCODE_FILENAME="$(echo -e "${EXITCODE_FILENAME}" | tr -d '[:space:]')"
-
-echo GP_WORKING_DIR is $GP_WORKING_DIR
 
 #
 # and a possibly different container id to use to save or reuse a cached container
@@ -91,12 +83,10 @@ echo "========== 1. synching gp_metadata_dir"
 echo "aws s3 sync $GP_S3_ROOT$GP_METADATA_DIR $GP_LOCAL_PREFIX$GP_METADATA_DIR"
 aws s3 sync $GP_S3_ROOT$GP_METADATA_DIR $GP_LOCAL_PREFIX$GP_METADATA_DIR 
 
-ls -alrt $GP_LOCAL_PREFIX$GP_METADATA_DIR 
 
 # make sure scripts in metadata dir are executable
 echo "========== 2. chmodding $GP_METADATA_DIR from $PWD"
 chmod a+rwx $LOCAL_DIR$GP_METADATA_DIR/*
-
 
 
 for i in "${!GP_MOUNT_POINT_ARRAY[@]}"
@@ -136,6 +126,7 @@ then
 fi
 
 synchDir.sh 30s $GP_LOCAL_PREFIX$GP_WORKING_DIR $GP_S3_ROOT$GP_WORKING_DIR &
+synchDir.sh 30s $GP_LOCAL_PREFIX$GP_METADATA_DIR $GP_S3_ROOT$GP_METADATA_DIR &
 
 echo "========== S3 copies in complete, DEBUG inside 1st container ================="
 
@@ -153,12 +144,11 @@ echo "========== 6. PERFORMING aws s3 sync  $LOCAL_DIR/$GP_METADATA_DIR $GP_S3_R
 aws s3 sync  $GP_LOCAL_PREFIX/$GP_METADATA_DIR $GP_S3_ROOT$GP_METADATA_DIR --quiet
 
 # save other return points that were passed in by GenePattern
-GP_S3_RETURN_POINT_ARRAY=(${GP_S3_RETURN_POINTS//:/ })
-echo "Mount points for the containers are:"
-for i in "${!GP_S3_RETURN_POINT_ARRAY[@]}"
-do
-     aws s3 sync $GP_S3_ROOT${GP_S3_RETURN_POINT_ARRAY[i]}  $GP_LOCAL_PREFIX${GP_S3_RETURN_POINT_ARRAY[i]}
-done
+#GP_S3_RETURN_POINT_ARRAY=(${GP_S3_RETURN_POINTS//:/ })
+#for i in "${!GP_S3_RETURN_POINT_ARRAY[@]}"
+#do
+#     aws s3 sync $GP_S3_ROOT${GP_S3_RETURN_POINT_ARRAY[i]}  $GP_LOCAL_PREFIX${GP_S3_RETURN_POINT_ARRAY[i]}
+#done
 
 
 
