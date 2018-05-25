@@ -1,12 +1,12 @@
 #!/bin/sh
 
-if [ "x$MODULE_SPECIFIC_CONTAINER" = "x" ]; then
+if [ "x$GP_MODULE_SPECIFIC_CONTAINER" = "x" ]; then
     # Variable is empty
     echo "== no MODULE_SPECIFIC_CONTAINER specified. Using default for test purposes "
-    MODULE_SPECIFIC_CONTAINER=liefeld/test-cache_module_specific_container
+    GP_MODULE_SPECIFIC_CONTAINER=liefeld/test-cache_module_specific_container
 fi
 
-CONTAINER_TAG=$MODULE_SPECIFIC_CONTAINER
+CONTAINER_TAG=$GP_MODULE_SPECIFIC_CONTAINER
 CONTAINER_VERSION=1
 #PROFILE="--profile genepattern"
 PROFILE=""

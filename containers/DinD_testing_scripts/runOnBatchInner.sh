@@ -45,13 +45,13 @@ aws s3 sync $WORKING_DIR $S3_ROOT$WORKING_DIR --profile genepattern
 aws s3 sync $GP_METADATA_DIR $S3_ROOT$GP_METADATA_DIR --profile genepattern 
 
 ######### end new part for script #################################################
-
+#  {name=MOD_LIBS, value=$MOD_LIBS},  need for R
 aws batch submit-job \
       --job-name $JOB_ID \
       --job-queue $JOB_QUEUE \
-      --container-overrides "memory=$CONTAINER_OVERRIDE_MEMORY,environment=[{name=MOD_LIBS, value=$MOD_LIBS},{name=MOD_LIBS_S3, value=$MOD_LIBS_S3}, {name=DOCKER_CONTAINER, value=$DOCKER_CONTAINER}, {name=GP_METADATA_DIR,value=$GP_METADATA_DIR},{name=STDOUT_FILENAME,value=$STDOUT_FILENAME},{name=STDERR_FILENAME,value=$STDERR_FILENAME},{name=EXITCODE_FILENAME,value=$EXITCODE_FILENAME}]"  \
+      --container-overrides "memory=$CONTAINER_OVERRIDE_MEMORY,environment=[{name=MOD_LIBS_S3, value=$MOD_LIBS_S3}, {name=GP_DOCKER_CONTAINER, value=$DOCKER_CONTAINER}, {name=GP_METADATA_DIR,value=$GP_METADATA_DIR},{name=GP_S3_ROOT,value=$S3_ROOT},{name=GP_WORKING_DIR,value=$WORKING_DIR},{name=GP_MODULE_SPECIFIC_CONTAINER,value=liefeld/test_new_api}, {name=GP_DOCKER_MOUNT_POINTS, value=$INPUT_FILE_DIRECTORIES:$WORKING_DIR:$TASKLIB}]"  \
       --job-definition $JOB_DEFINITION_NAME \
-      --parameters taskLib=$TASKLIB,inputFileDirectory=$INPUT_FILE_DIRECTORIES,s3_root=$S3_ROOT,working_dir=$WORKING_DIR,exe1="$REMOTE_COMMAND"  \
+      --parameters taskLib=$TASKLIB  \
       --profile genepattern
 
 
