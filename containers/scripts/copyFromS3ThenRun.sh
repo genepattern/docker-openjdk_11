@@ -27,7 +27,7 @@ GP_DOCKER_MOUNT_POINTS="$(echo -e "${GP_DOCKER_MOUNT_POINTS}" | tr -d '[:space:]
 GP_S3_ROOT="$(echo -e "${GP_S3_ROOT}" | tr -d '[:space:]')"
 GP_WORKING_DIR="$(echo -e "${GP_WORKING_DIR}" | tr -d '[:space:]')"
 GP_DOCKER_CONTAINER="$(echo -e "${GP_DOCKER_CONTAINER}" | tr -d '[:space:]')"
-GP_TASKLIB="$(echo -e "${GP_TASKLIB" | tr -d '[:space:]')"
+GP_TASKLIB="$(echo -e "${GP_TASKLIB}" | tr -d '[:space:]')"
 
 # also expect
 #    GP_MODULE_NAME
