@@ -27,8 +27,17 @@ GP_DOCKER_MOUNT_POINTS="$(echo -e "${GP_DOCKER_MOUNT_POINTS}" | tr -d '[:space:]
 GP_S3_ROOT="$(echo -e "${GP_S3_ROOT}" | tr -d '[:space:]')"
 GP_WORKING_DIR="$(echo -e "${GP_WORKING_DIR}" | tr -d '[:space:]')"
 GP_DOCKER_CONTAINER="$(echo -e "${GP_DOCKER_CONTAINER}" | tr -d '[:space:]')"
-GP_TASKILIB="$(echo -e "${GP_TASLKLIB" | tr -d '[:space:]')"
+GP_TASKLIB="$(echo -e "${GP_TASKLIB" | tr -d '[:space:]')"
 
+# also expect
+#    GP_MODULE_NAME
+#    GP_MODULE_LSID
+#    GP_MODULE_LSID_VERSION
+#
+# have save modules name as GP_MODULE_SPECIFIC_CONTAINER=$GP_MODULE_NAME_$GP_MODULE_LSID_VERSION
+# rename GP_DOCKER_CONTAINER as  GP_JOB_DOCKER_IMAGE
+#        GP_WORKING_DIR    as    GP_JOB_WORKING_DIR  
+ 
 # these have defaults that can be overridden
 : ${GP_METADATA_DIR=$GP_WORKING_DIR/.gp_metadata}
 : ${GP_AWS_SYNC_SCRIPT_NAME="aws-sync-from-s3.sh"}
@@ -39,6 +48,7 @@ GP_TASKILIB="$(echo -e "${GP_TASLKLIB" | tr -d '[:space:]')"
 : ${GP_JOB_WALLTIME_SEC="86400"}
 : ${GP_JOB_WALLTIME_PADDING="600"}
 
+# make this work
 let GP_MAX_WALLTIME=$GP_JOB_WALLTIME_SEC+$GP_JOB_WALLTIME_PADDING
 
 # now strip any spaces that are present of either end
@@ -57,6 +67,21 @@ if [ "xGP_MODULE_SPECIFIC_CONTAINER" = "x" ]; then
     # Variable is empty
     echo "== no MODULE_SPECIFIC_CONTAINER specified. No caching of the container will be done at the end of the run "
 fi
+
+###### print out the environment for later debugging	
+
+printenv
+
+# Loop over each line from the env command
+while read -r line; do
+  # Get the string before = (the var name)
+  name="${line%=*}"
+  eval value="\$$name"
+
+  echo "ENV VAR name: ${name}, value: ${value}"
+done <<EOF
+$(env)
+EOF
 
 ############################   finished getting all inputs ################################
 
@@ -79,8 +104,8 @@ done
 #
 GP_LOCAL_PREFIX=/local
 
-mkdir -p  $LOCAL_DIR$GP_WORKING_DIR
-cd $LOCAL_DIR$GP_WORKING_DIR
+mkdir -p  $GP_LOCAL_PREFIX$GP_WORKING_DIR
+cd $GP_LOCAL_PREFIX$GP_WORKING_DIR
 
 # sync the metadata dir - VITAL - this is where the aws-sync and the exec script will come from
 echo "========== 1. synching gp_metadata_dir"
@@ -90,14 +115,14 @@ aws s3 sync $GP_S3_ROOT$GP_METADATA_DIR $GP_LOCAL_PREFIX$GP_METADATA_DIR
 
 # make sure scripts in metadata dir are executable
 echo "========== 2. chmodding $GP_METADATA_DIR from $PWD"
-chmod a+rwx $LOCAL_DIR$GP_METADATA_DIR/*
+chmod a+rwx $GP_LOCAL_PREFIX$GP_METADATA_DIR/*
 
-
-for i in "${!GP_MOUNT_POINT_ARRAY[@]}"
-do
-    aws s3 sync $GP_S3_ROOT${GP_MOUNT_POINT_ARRAY[i]}  $GP_LOCAL_PREFIX${GP_MOUNT_POINT_ARRAY[i]}
-    echo " synching aws s3 sync $GP_S3_ROOT${GP_MOUNT_POINT_ARRAY[i]}  $GP_LOCAL_PREFIX${GP_MOUNT_POINT_ARRAY[i]}"
-done
+# defer synch to Peter's script
+#for i in "${!GP_MOUNT_POINT_ARRAY[@]}"
+#do
+#    aws s3 sync $GP_S3_ROOT${GP_MOUNT_POINT_ARRAY[i]}  $GP_LOCAL_PREFIX${GP_MOUNT_POINT_ARRAY[i]}
+#    echo " synching aws s3 sync $GP_S3_ROOT${GP_MOUNT_POINT_ARRAY[i]}  $GP_LOCAL_PREFIX${GP_MOUNT_POINT_ARRAY[i]}"
+#done
 
 ###################### TBD: load cached libraries for R modules ##########################
 #
@@ -123,9 +148,9 @@ if [ -f "$GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME" ]
 then
     echo "==========  4. Running Peter's s3 script =========="
     . $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME
-    mv $GP_LOCAL_PREFIX$GP_METADATA_DIR/aws-sync-from-s3.sh $GP_LOCAL_PREFIX$GP_METADATA_DIR/aws-sync-from-s3_HOLD.sh
-    echo "# stubbed out to prevent call from inside inner container" > $GP_LOCAL_PREFIX$GP_METADATA_DIR/aws-sync-from-s3.sh
-    chmod a+x $GP_LOCAL_PREFIX$GP_METADATA_DIR/aws-sync-from-s3.sh
+    mv $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME_HOLD
+    echo "# stubbed out to prevent call from inside inner container" > $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME
+    chmod a+x $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME
     echo "==========  Stubbed out S3 script =========="
 fi
 
@@ -139,12 +164,12 @@ echo "========== S3 copies in complete, DEBUG inside 1st container =============
 echo "========== END RUNNING Module, copy back from S3  ================="
 
 # send the generated files back
-echo "========== 5. PERFORMING aws s3 sync $LOCAL_DIR/$GP_WORKING_DIR $GP_S3_ROOT$GP_WORKING_DIR"
+echo "========== 5. PERFORMING aws s3 sync $GP_LOCAL_PREFIX/$GP_WORKING_DIR $GP_S3_ROOT$GP_WORKING_DIR"
 ls $GP_LOCAL_PREFIX/$GP_WORKING_DIR
 aws s3 sync $GP_LOCAL_PREFIX/$GP_WORKING_DIR $GP_S3_ROOT$GP_WORKING_DIR 
 
 # Synch metadata to ensure stderr.txt etc make it back
-echo "========== 6. PERFORMING aws s3 sync  $LOCAL_DIR/$GP_METADATA_DIR $GP_S3_ROOT$GP_METADATA_DIR"
+echo "========== 6. PERFORMING aws s3 sync  $GP_LOCAL_PREFIX/$GP_METADATA_DIR $GP_S3_ROOT$GP_METADATA_DIR"
 aws s3 sync  $GP_LOCAL_PREFIX/$GP_METADATA_DIR $GP_S3_ROOT$GP_METADATA_DIR --quiet
 
 # save other return points that were passed in by GenePattern
