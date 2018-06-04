@@ -46,10 +46,7 @@ GP_TASKLIB="$(echo -e "${GP_TASKLIB}" | tr -d '[:space:]')"
 : ${EXITCODE_FILENAME=$GP_METADATA_DIR/exit_code.txt}
 : ${GP_MODULE_EXEC=$GP_METADATA_DIR/exec.sh}
 : ${GP_JOB_WALLTIME_SEC="86400"}
-: ${GP_JOB_WALLTIME_PADDING="600"}
 
-# make this work
-let GP_MAX_WALLTIME=$GP_JOB_WALLTIME_SEC+$GP_JOB_WALLTIME_PADDING
 
 # now strip any spaces that are present of either end
 GP_METADATA_DIR="$(echo -e "${GP_METADATA_DIR}" | tr -d '[:space:]')"
@@ -144,15 +141,18 @@ fi
 
 
 # RUN Peter's file for additional S3 fetches
-if [ -f "$GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME" ]
-then
-    echo "==========  4. Running Peter's s3 script =========="
-    . $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME
-    mv $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME_HOLD
-    echo "# stubbed out to prevent call from inside inner container" > $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME
-    chmod a+x $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME
-    echo "==========  Stubbed out S3 script =========="
-fi
+#if [ -f "$GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME" ]
+#then
+#    echo "==========  4. Running Peter's s3 script =========="
+#    . $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME
+#    $GP_AWS_SYNC_SCRIPT_NAME_HOLD=aws-sync-from-s3.sh.hold
+#
+#    echo mv $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME_HOLD
+#    mv $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME_HOLD
+#    echo "# stubbed out to prevent call from inside inner container" > $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME
+#    chmod a+x $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME
+#    echo "==========  Stubbed out S3 script =========="
+#fi
 
 synchDir.sh 30s $GP_LOCAL_PREFIX$GP_WORKING_DIR $GP_S3_ROOT$GP_WORKING_DIR &
 synchDir.sh 30s $GP_LOCAL_PREFIX$GP_METADATA_DIR $GP_S3_ROOT$GP_METADATA_DIR &
