@@ -66,10 +66,8 @@ if [ "xGP_MODULE_SPECIFIC_CONTAINER" = "x" ]; then
 fi
 
 ###### print out the environment for later debugging	
-
-printenv
-
 # Loop over each line from the env command
+# add the test to make it easier to search cloudwatch logs
 while read -r line; do
   # Get the string before = (the var name)
   name="${line%=*}"
@@ -139,7 +137,7 @@ else
 fi
 ###################### END TBD: load cached libraries for R modules ##########################
 
-
+. $GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME
 # RUN Peter's file for additional S3 fetches
 #if [ -f "$GP_LOCAL_PREFIX$GP_METADATA_DIR/$GP_AWS_SYNC_SCRIPT_NAME" ]
 #then

@@ -35,6 +35,15 @@ chmod -R a+rwx $WORKING_DIR
 REMOTE_COMMAND=$EXEC_SHELL
 
 #echo "wrote $EXEC_SHELL"
+SYNCH_SHELL=$GP_METADATA_DIR/aws-sync-from-s3.sh
+
+# create the aws-synch-from S3.sh script
+echo "# sync stuff into outer container \n" >> $SYNCH_SHELL
+echo "aws s3 sync $S3_ROOT$WORKING_DIR /local$WORKING_DIR \n"   >>$SYNCH_SHELL
+echo "aws s3 sync $S3_ROOT$INPUT_FILE_DIRECTORIES /local$INPUT_FILE_DIRECTORIES \n"   >>$SYNCH_SHELL
+echo "aws s3 sync $S3_ROOT$TASKLIB  /local$TASKLIB  \n"   >>$SYNCH_SHELL
+echo "aws s3 sync $S3_ROOT$GP_METADATA_DIR  /localGP_METADATA_DIR  \n"   >>$SYNCH_SHELL
+echo "\n " >>$SYNCH_SHELL 
 
 #
 # Copy the input files to S3 using the same path
@@ -49,7 +58,7 @@ aws s3 sync $GP_METADATA_DIR $S3_ROOT$GP_METADATA_DIR --profile genepattern
 aws batch submit-job \
       --job-name $JOB_ID \
       --job-queue $JOB_QUEUE \
-      --container-overrides "memory=$CONTAINER_OVERRIDE_MEMORY,environment=[{name=MOD_LIBS_S3, value=$MOD_LIBS_S3}, {name=GP_DOCKER_CONTAINER, value=$DOCKER_CONTAINER}, {name=GP_METADATA_DIR,value=$GP_METADATA_DIR},{name=GP_S3_ROOT,value=$S3_ROOT},{name=GP_WORKING_DIR,value=$WORKING_DIR},{name=GP_MODULE_SPECIFIC_CONTAINER,value=liefeld/test_new_api}, {name=GP_DOCKER_MOUNT_POINTS, value=$INPUT_FILE_DIRECTORIES:$WORKING_DIR:$TASKLIB},{name=GP_TASKLIB, value=$TASKLIB}]"  \
+      --container-overrides "memory=$CONTAINER_OVERRIDE_MEMORY,environment=[ {name=GP_DOCKER_CONTAINER, value=$DOCKER_CONTAINER}, {name=GP_METADATA_DIR,value=$GP_METADATA_DIR},{name=GP_S3_ROOT,value=$S3_ROOT},{name=GP_WORKING_DIR,value=$WORKING_DIR},{name=GP_MODULE_SPECIFIC_CONTAINER,value=liefeld/test_new_api}, {name=GP_DOCKER_MOUNT_POINTS, value=$INPUT_FILE_DIRECTORIES:$WORKING_DIR:$TASKLIB},{name=GP_TASKLIB, value=$TASKLIB}]"  \
       --job-definition $JOB_DEFINITION_NAME \
       --profile genepattern
 
