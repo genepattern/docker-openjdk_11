@@ -60,7 +60,8 @@ docker exec  -e GP_METADATA_DIR="$GP_METADATA_DIR" -t $CONTAINER_ID sh $GP_MODUL
 
 echo "======== runLocal: Module execution complete  ========"
 docker stop $CONTAINER_ID
-/usr/local/bin/saveContainerInECR.sh
+echo "Not saving to ECR - stubbed out"
+#/usr/local/bin/saveContainerInECR.sh
 
 
 
