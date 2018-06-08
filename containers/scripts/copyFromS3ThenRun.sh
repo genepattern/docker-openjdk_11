@@ -44,7 +44,6 @@ GP_TASKLIB="$(echo -e "${GP_TASKLIB}" | tr -d '[:space:]')"
 : ${STDOUT_FILENAME=$GP_METADATA_DIR/stdout.txt}
 : ${STDERR_FILENAME=$GP_METADATA_DIR/stderr.txt}
 : ${EXITCODE_FILENAME=$GP_METADATA_DIR/exit_code.txt}
-: ${GP_MODULE_EXEC=$GP_METADATA_DIR/exec.sh}
 : ${GP_JOB_WALLTIME_SEC="86400"}
 
 
@@ -81,12 +80,12 @@ EOF
 ############################   finished getting all inputs ################################
 
 # this we create by splitting the mount points that are provided delimited with a colon
-GP_MOUNT_POINT_ARRAY=(${GP_DOCKER_MOUNT_POINTS//:/ })
-echo "Mount points for the containers are:"
-for i in "${!GP_MOUNT_POINT_ARRAY[@]}"
-do
-    echo "    $i=>${GP_MOUNT_POINT_ARRAY[i]}"
-done
+#GP_MOUNT_POINT_ARRAY=(${GP_DOCKER_MOUNT_POINTS//:/ })
+#echo "Mount points for the containers are:"
+#for i in "${!GP_MOUNT_POINT_ARRAY[@]}"
+#do
+#    echo "    $i=>${GP_MOUNT_POINT_ARRAY[i]}"
+#done
 
 # make a directory into which we will S3 sync everything we have had passed in to the 'outer' container
 # this will NOT be at the same path as on the GP head node and the compute node, but it will be mounted to the
@@ -112,12 +111,6 @@ aws s3 sync $GP_S3_ROOT$GP_METADATA_DIR $GP_LOCAL_PREFIX$GP_METADATA_DIR
 echo "========== 2. chmodding $GP_METADATA_DIR from $PWD"
 chmod a+rwx $GP_LOCAL_PREFIX$GP_METADATA_DIR/*
 
-# defer synch to Peter's script
-#for i in "${!GP_MOUNT_POINT_ARRAY[@]}"
-#do
-#    aws s3 sync $GP_S3_ROOT${GP_MOUNT_POINT_ARRAY[i]}  $GP_LOCAL_PREFIX${GP_MOUNT_POINT_ARRAY[i]}
-#    echo " synching aws s3 sync $GP_S3_ROOT${GP_MOUNT_POINT_ARRAY[i]}  $GP_LOCAL_PREFIX${GP_MOUNT_POINT_ARRAY[i]}"
-#done
 
 ###################### TBD: load cached libraries for R modules ##########################
 #
