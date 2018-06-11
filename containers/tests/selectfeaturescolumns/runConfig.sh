@@ -22,6 +22,7 @@ GP_DOCKER_CONTAINER=genepattern/docker-java17openjdk:develop
 S3_ROOT=s3://moduleiotest
 #JOB_DEFINITION_NAME="Java17_OpenJDK_Generic"
 JOB_DEFINITION_NAME="S3ModuleWrapper"
+
 JOB_ID=gp_S3WRAPPER_SFC_JAVA17_$1
 JOB_QUEUE=TedTest
 
