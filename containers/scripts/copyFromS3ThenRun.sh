@@ -143,7 +143,7 @@ fi
 #    echo "==========  Stubbed out S3 script =========="
 #fi
 
-synchDir.sh 30s $GP_LOCAL_PREFIX$GP_JOB_WORKING_DIR $AWS_S3_PREFIX$GP_JOB_WORKING_DIR &
+#synchDir.sh 30s $GP_LOCAL_PREFIX$GP_JOB_WORKING_DIR $AWS_S3_PREFIX$GP_JOB_WORKING_DIR &
 synchDir.sh 30s $GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR $AWS_S3_PREFIX$GP_JOB_METADATA_DIR &
 
 echo "========== S3 copies in complete, DEBUG inside 1st container ================="
