@@ -68,10 +68,13 @@ docker exec $CONTAINER_ID ls -alrt  $GP_MODULE_DIR
 if [ -f "$GP_LOCAL_PREFIX$GP_MODULE_DIR/r.package.info" ]
 then
         #echo "$GP_MODULE_DIR/r.package.info found.">$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR/tedlog1.txt 
-        docker exec $CONTAINER_ID Rscript /build/source/installPackages.R $GP_MODULE_DIR/r.package.info >$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR/r.package.installs.out.txt 2>$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR/r.package.installs.err.txt
-#else
-        #echo "$GP_MODULE_DIR/r.package.info   not found" >$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR/tedlog3.txt
-        #ls $GP_LOCAL_PREFIX$GP_MODULE_DIR
+        docker exec $CONTAINER_ID  ls /build/source/installPackages.R
+	INSTALL_R_PRESENT = $?
+        if [ $INSTALL_R_PRESENT != 0 ]
+		docker cp /usr/local/bin/installPackages.R  $CONTAINER_ID:/build/source/installPackages.R
+		docker exec $CONTAINER_ID
+        fi
+	docker exec $CONTAINER_ID Rscript /build/source/installPackages.R $GP_MODULE_DIR/r.package.info >$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR/r.package.installs.out.txt 2>$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR/r.package.installs.err.txt
 fi
 
 #

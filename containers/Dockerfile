@@ -3,6 +3,7 @@ FROM docker
 
 COPY scripts/*.sh /usr/local/bin/
 COPY scripts/*.py /usr/local/bin/
+COPY scripts/*.R /usr/local/bin/
 
 RUN apk update && \
     apk upgrade && \  
