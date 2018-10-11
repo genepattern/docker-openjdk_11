@@ -168,6 +168,11 @@ aws s3 sync  $GP_LOCAL_PREFIX/$GP_JOB_METADATA_DIR $AWS_S3_PREFIX$GP_JOB_METADAT
 #     aws s3 sync $AWS_S3_PREFIX${GP_S3_RETURN_POINT_ARRAY[i]}  $GP_LOCAL_PREFIX${GP_S3_RETURN_POINT_ARRAY[i]}
 #done
 
+# Delete the JobResults and metadata dirs now that they have sync'd back
+# TBD: also remove input files from user dir
+echo "=========7.  Removing Job and metadata directories"
+rm -rf $GP_LOCAL_PREFIX/$GP_JOB_WORKING_DIR
+rm -rf $GP_LOCAL_PREFIX/$GP_JOB_METADATA_DIR
 
 
 
