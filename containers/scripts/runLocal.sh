@@ -92,6 +92,12 @@ docker stop $CONTAINER_ID
 echo "Not saving to ECR - stubbed out"
 #/usr/local/bin/saveContainerInECR.sh
 
+# clean up exitted containers so that the docker space does not fill up with old
+# containers we won't run again.  Maybe we should leave images as they might actually be reused
+# but not for now
+echo "=========== removing all exited containers =============="
+docker ps -aq --no-trunc -f status=exited | xargs docker rm
+docker rmi $GP_JOB_DOCKER_IMAGE
 
 
 
