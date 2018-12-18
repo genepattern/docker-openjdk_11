@@ -2,13 +2,18 @@
 #
 # &copy; 2017-2018 Regents of the University of California and the Broad Institute. All rights reserved.
 #
-
-
 : ${GP_MODULE_EXEC=$GP_JOB_METADATA_DIR/exec.sh}
 
 cd $GP_LOCAL_PREFIX$WORKING_DIR
 
 echo "========== runLocal.sh inside 1st container, runLocal.sh - running module now  ================="
+
+echo "###### looking for a module specific cached container #######"
+. resolveContainerNameToCacheOrNot.sh 
+echo " ### docker = $GP_JOB_DOCKER_IMAGE "
+echo " ### ECR cache = $GP_MODULE_SPECIFIC_CONTAINER"
+echo " ### USE THIS = $CONTAINER_TO_USE"
+
 
 # pull first so that the stderr.txt is not polluted by the output of docker getting the image
 docker pull $GP_JOB_DOCKER_IMAGE
@@ -89,15 +94,14 @@ echo "{ \"exit_code\": $exit_code }" >> $GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR/doc
 
 echo "======== runLocal: Module execution complete  ========"
 docker stop $CONTAINER_ID
-echo "Not saving to ECR - stubbed out"
-#/usr/local/bin/saveContainerInECR.sh
+echo "Saving to ECR "
+/usr/local/bin/saveContainerInECR.sh
 
 # clean up exitted containers so that the docker space does not fill up with old
 # containers we won't run again.  Maybe we should leave images as they might actually be reused
 # but not for now
 echo "=========== removing all exited containers =============="
 docker ps -aq --no-trunc -f status=exited | xargs docker rm
-docker rmi $GP_JOB_DOCKER_IMAGE
 
 
 

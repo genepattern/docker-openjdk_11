@@ -1,9 +1,19 @@
 #!/bin/sh
+env
 
 if [ "x$GP_MODULE_SPECIFIC_CONTAINER" = "x" ]; then
     # Variable is empty
     echo "== no MODULE_SPECIFIC_CONTAINER specified. Using default for test purposes "
-    GP_MODULE_SPECIFIC_CONTAINER=liefeld/test-cache_module_specific_container
+    # GP_MODULE_SPECIFIC_CONTAINER=liefeld/test-cache_module_specific_container
+
+    #SAFE_LSID="${GP_MODULE_LSID//:/_}"
+    #SEP='_'
+    #GP_MSPC=$GP_MODULE_NAME$SEP$SAFE_LSID
+    # make it lowercase
+    #GP_MODULE_SPECIFIC_CONTAINER=$(echo $GS_MSPC | tr '[:upper:]' '[:lower:]') 
+
+    GP_MODULE_SPECIFIC_CONTAINER="`python /usr/local/bin/make_repo_name.py $GP_MODULE_LSID $GP_MODULE_NAME`"
+    echo "== saving in ECR as $GP_MODULE_SPECIFIC_CONTAINER =="
 fi
 
 CONTAINER_TAG=$GP_MODULE_SPECIFIC_CONTAINER
@@ -15,7 +25,7 @@ aws --region us-east-1 ecr describe-images --repository-name $CONTAINER_TAG  > r
 if [ -s repo.json ];
 then
    echo "Container already exists in ECR"
-   #exit
+   exit
 else
    echo "false"
 fi
@@ -26,6 +36,8 @@ idvar="`python /usr/local/bin/getContainerId.py`"
 # commit the container as a new image
 docker commit $idvar $CONTAINER_TAG
 
+echo "Committed $CONTAINER_TAG locally to docker"
+
 # login to the AWS ECR
 aws --region us-east-1 ecr get-login --no-include-email  > dockerlogin.sh
 sh dockerlogin.sh
@@ -34,6 +46,10 @@ sh dockerlogin.sh
 
 aws --region us-east-1 ecr create-repository --repository-name $CONTAINER_TAG  > repos.json
 echo "repo creation returned..."
+more repos.json
+
+AWS_ACCOUNT="`python /usr/local/bin/get_aws_account.py`"
+echo " +++  identified aws account as $AWS_ACCOUNT "
 
 # tag the just-saved container for the ECR
 # the aws id # is hard coded - should get it dynamically

@@ -16,6 +16,7 @@ RUN apk update && \
         mailcap \
         && \
     pip install --upgrade awscli==1.14.5 s3cmd==2.0.1 python-magic && \
+    pip install boto3 && \
     apk -v --purge del py-pip && \
     rm /var/cache/apk/* && \
     chmod ugo+x /usr/local/bin/*.sh
