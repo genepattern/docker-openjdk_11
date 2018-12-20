@@ -4,16 +4,7 @@ env
 if [ "x$GP_MODULE_SPECIFIC_CONTAINER" = "x" ]; then
     # Variable is empty
     echo "== no MODULE_SPECIFIC_CONTAINER specified. Using default for test purposes "
-    # GP_MODULE_SPECIFIC_CONTAINER=liefeld/test-cache_module_specific_container
-
-    #SAFE_LSID="${GP_MODULE_LSID//:/_}"
-    #SEP='_'
-    #GP_MSPC=$GP_MODULE_NAME$SEP$SAFE_LSID
-    # make it lowercase
-    #GP_MODULE_SPECIFIC_CONTAINER=$(echo $GS_MSPC | tr '[:upper:]' '[:lower:]') 
-
     GP_MODULE_SPECIFIC_CONTAINER="`python /usr/local/bin/make_repo_name.py $GP_MODULE_LSID $GP_MODULE_NAME`"
-    echo "== saving in ECR as $GP_MODULE_SPECIFIC_CONTAINER =="
 fi
 
 CONTAINER_TAG=$GP_MODULE_SPECIFIC_CONTAINER
@@ -27,6 +18,7 @@ then
    echo "Container already exists in ECR"
    exit
 else
+   echo "== saving in ECR as $GP_MODULE_SPECIFIC_CONTAINER =="
    echo "false"
 fi
 

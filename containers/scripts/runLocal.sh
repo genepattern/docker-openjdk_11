@@ -16,7 +16,8 @@ echo " ### USE THIS = $CONTAINER_TO_USE"
 
 
 # pull first so that the stderr.txt is not polluted by the output of docker getting the image
-docker pull $GP_JOB_DOCKER_IMAGE
+#docker pull $GP_JOB_DOCKER_IMAGE
+# +++ PULL IS NOW IN THE  resolveContainerNameToCacheOrNot.sh SCRIPT +++++
 
 # start the container with an endless loop
 # copy the desired dirs into it

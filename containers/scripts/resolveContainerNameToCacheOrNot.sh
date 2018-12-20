@@ -1,10 +1,12 @@
+
+
 if [ "x$GP_MODULE_SPECIFIC_CONTAINER" = "x" ]; then
     # Variable is empty
     echo "== no MODULE_SPECIFIC_CONTAINER specified. Using default for test purposes "
     # GP_MODULE_SPECIFIC_CONTAINER=liefeld/test-cache_module_specific_container
  
     GP_MODULE_SPECIFIC_CONTAINER="`python /usr/local/bin/make_repo_name.py $GP_MODULE_LSID $GP_MODULE_NAME`"
-    echo "== saving in ECR as $GP_MODULE_SPECIFIC_CONTAINER =="
+    echo "== ECR TAG is  $GP_MODULE_SPECIFIC_CONTAINER =="
 fi
 
 CONTAINER_TAG=$GP_MODULE_SPECIFIC_CONTAINER
@@ -28,10 +30,13 @@ then
    # pull the ECR container
    docker pull $AWS_ACCOUNT.dkr.ecr.us-east-1.amazonaws.com/$CONTAINER_TAG
 
+   # tell the local docker that 
+   docker tag $AWS_ACCOUNT.dkr.ecr.us-east-1.amazonaws.com/$CONTAINER_TAG $GP_JOB_DOCKER_IMAGE
    #exit
 else
-   echo "false"
+   echo " == Pulling $GP_JOB_DOCKER_IMAGE from dockerhub "
    CONTAINER_TO_USE=$GP_JOB_DOCKER_IMAGE
+   docker pull $GP_JOB_DOCKER_IMAGE
 fi
 
 
