@@ -64,9 +64,9 @@ fi
 # Try to log the case where a populated tasklib is already present inside the container
 #   - see if we can fail if it already exists and is populated
 #
-docker exec $CONTAINER_ID ls -alrt  $GP_MODULE_DIR
+# docker exec $CONTAINER_ID ls -alrt  $GP_MODULE_DIR
 docker cp $GP_LOCAL_PREFIX$GP_MODULE_DIR/ $CONTAINER_ID:$GP_MODULE_DIR
-docker exec $CONTAINER_ID ls -alrt  $GP_MODULE_DIR
+# docker exec $CONTAINER_ID ls -alrt  $GP_MODULE_DIR
 
 #
 # bootstrap package loading for old modules using shared containers
@@ -74,7 +74,7 @@ docker exec $CONTAINER_ID ls -alrt  $GP_MODULE_DIR
 if [ -f "$GP_LOCAL_PREFIX$GP_MODULE_DIR/r.package.info" ]
 then
         #echo "$GP_MODULE_DIR/r.package.info found.">$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR/tedlog1.txt 
-        docker exec $CONTAINER_ID  ls /build/source/installPackages.R
+        # docker exec $CONTAINER_ID  ls /build/source/installPackages.R
 	INSTALL_R_PRESENT = $?
         if [ $INSTALL_R_PRESENT != 0 ]
 	then
@@ -103,6 +103,5 @@ echo "Saving to ECR "
 # but not for now
 echo "=========== removing all exited containers =============="
 docker ps -aq --no-trunc -f status=exited | xargs docker rm
-
 
 
