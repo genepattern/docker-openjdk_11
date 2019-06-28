@@ -41,11 +41,28 @@ for i in "${!GP_MOUNT_POINT_ARRAY[@]}"
 do
     A_MOUNT=" --mount type=bind,src=$GP_LOCAL_PREFIX${GP_MOUNT_POINT_ARRAY[i]},dst=${GP_MOUNT_POINT_ARRAY[i]} "
     MOUNT_STR=$MOUNT_STR$A_MOUNT
+    # make sure the mounts are rwx for whatever user is inside the container, not ideal but a workaround for now
+    chmod -R a+rwx $GP_LOCAL_PREFIX${GP_MOUNT_POINT_ARRAY[i]}
+    echo FILE PERMISSIONS =========================================$GP_LOCAL_PREFIX${GP_MOUNT_POINT_ARRAY[i]}
+    ls -alrt $GP_LOCAL_PREFIX${GP_MOUNT_POINT_ARRAY[i]}
 done
 WALLTIME_UNIT="s"
-echo "CONTAINER RUN IS docker run -d   --mount type=bind,src=$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR,dst=$GP_JOB_METADATA_DIR $MOUNT_STR -t $GP_JOB_DOCKER_IMAGE sleep 90000s "
+echo "CONTAINER RUN IS docker run -d   --mount type=bind,src=$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR,dst=$GP_JOB_METADATA_DIR $MOUNT_STR -t $GP_JOB_DOCKER_IMAGE sleep ${GP_JOB_WALLTIME_SEC}${WALLTIME_UNIT} "
 
-CONTAINER_ID="`docker run -d   --mount type=bind,src=$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR,dst=$GP_JOB_METADATA_DIR $MOUNT_STR -t $GP_JOB_DOCKER_IMAGE sleep 90000s `"
+#
+# test if this container uses 'sleep #s' or 'sleep #' without the 's' then launch with the approriate call
+# the docker-r-seurat-scripts container used BuildRoot 2014.02 which fails on the sleep command if an s is present
+# Note this will still fail if we get a non-unix container
+#
+docker run  --mount type=bind,src=$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR,dst=$GP_JOB_METADATA_DIR $MOUNT_STR -t $GP_JOB_DOCKER_IMAGE sleep 0s 
+
+if [ $? -ne 0  ];
+then
+   echo "sleep failed, retry without the 's'"
+   CONTAINER_ID="`docker run -d  --mount type=bind,src=$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR,dst=$GP_JOB_METADATA_DIR $MOUNT_STR -t $GP_JOB_DOCKER_IMAGE sleep ${GP_JOB_WALLTIME_SEC} `"
+else 
+   CONTAINER_ID="`docker run -d  --mount type=bind,src=$GP_LOCAL_PREFIX$GP_JOB_METADATA_DIR,dst=$GP_JOB_METADATA_DIR $MOUNT_STR -t $GP_JOB_DOCKER_IMAGE sleep ${GP_JOB_WALLTIME_SEC}s `"
+fi
 
 echo CONTAINER_ID is $CONTAINER_ID
 
